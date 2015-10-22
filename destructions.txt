@@ -1,0 +1,61 @@
+Deployment Instructions:
+
+export ca UHSUTIL03 to jdk\bin\caroot.cer
+check java version to see which key store is needed
+import cert into jre calist: keytool -importcert -keystore "C:\Program Files\Java\jre7\lib\security\cacerts" -storepass "changeit" -file caroot.cer -noprompt
+if x64: keytool -importcert -keystore "C:\Program Files (x86)\Java\jre7\lib\security\cacerts" -storepass "changeit" -file caroot.cer -noprompt
+import cert into jre calist that FF and Chrome use: keytool -importcert -keystore "%userprofile%\AppData\LocalLow\Sun\Java\Deployment\security\trusted.certs" -storepass "" -file caroot.cer -noprompt
+copy .\DeploymentRuleSet.jar to "C:\Windows\Sun\Java\Deployment"
+
+
+\\uhs61927\jdk\keytool -importcert -keystore "C:\Program Files\Java\jre7\lib\security\cacerts" -storepass "changeit" -file "\\uhs61927\jdk\caroot.cer" -noprompt
+
+\\uhs61927\jdk\keytool -importcert -keystore "%JAVAPATH%\lib\security\cacerts" -storepass "changeit" -file "\\uhs61927\jdk\caroot.cer" -noprompt
+
+\\uhs61927\jdk\keytool -importcert -keystore "%userprofile%\AppData\LocalLow\Sun\Java\Deployment\security\trusted.certs" -storepass "" -file "\\uhs61927\jdk\caroot.cer" -noprompt
+
+copy .\DeploymentRuleSet.jar to "C:\Windows\Sun\Java\Deployment"
+
+copy "\\uhs61927\jdk\DeploymentRuleSet.jar" C:\Windows\Sun\Java\Deployment\
+_______________________________________________________________________________________________________
+
+Instructions to do this again:
+
+assign user permission to the code signing template on the CA
+
+export ca UHSUTIL03
+import cert into jre calist: copy
+import cert into jre calist that FF and Chrome use: keytool -importcert -keystore "%userprofile%\AppData\LocalLow\Sun\Java\Deployment\security\trusted.certs" -storepass "" -file caroot.cer
+create keystore and key pair: keytool -genkey -alias mykey -keyalg RSA -keysize 2048 -keystore keystore.jks -storepass changeit -validity 1095
+create certificate request: keytool -certreq -alias mykey -file mykey.csr -keystore keystore.jks -storepass changeit -validity 1095
+extract the private key from the keypair: keytool -v -importkeystore -srckeystore keystore.jks -srcalias mykey -destkeystore myp12file.pfx -deststoretype PKCS12 -validity 1095
+rename extension of private key: myp12file.p12 > myp12file.pfx
+sign the CSR using the private key and Windows CA (mykey.cer is the public key that gets created): C:\Windows\system32\certreq -submit -attrib "CertificateTemplate:CodeSigning" mykey.csr mykey.cer myp12file.pfx
+import the signed key into the keystore: keytool -importcert -keystore keystore.jks -file mykey.cer -alias mykey -storepass changeit -trustcacerts
+create the jar with the ruleset.xml: jar -cvf DeploymentRuleSet.jar ruleset.xml
+sign the jar with your signed key in your keystore: jarsigner -keystore keystore.jks -storepass changeit DeploymentRuleSet.jar mykey
+verify your jar: jarsigner -verify DeploymentRuleSet.jar
+
+now deploy
+
+http://enterprisemac.bruienne.com/2014/03/04/creating-a-signed-java-deployment-rule-set-with-windows-server-ca/
+http://serverfault.com/questions/548723/java-deployment-rule-set-via-ad-enterprise-ca/559753#559753
+http://sourceforge.net/projects/xca/
+KeyStore Explorer
+
+http://stackoverflow.com/questions/8387983/jarsigner-this-jar-contains-entries-whose-certificate-chain-is-not-validated
+
+
+
+http://natasha.int.uhs.com:17001/FedEx/print.jsp
+
+http://ss64.com/nt/certutil.html
+
+
+C:\Program Files\Java\jdk1.7.0_25\bin>keytool -delete -alias mykey -keystore "\\
+uhs65346\c$\Program Files\Java\jre7\lib\security\cacerts"
+
+C:\Program Files\Java\jdk1.7.0_25\bin>keytool -importcert -trustcacerts -keystor
+e "\\uhs65346\c$\Program Files\Java\jre7\lib\security\cacerts" -storepass "chang
+eit" -file caroot.cer -noprompt
+
